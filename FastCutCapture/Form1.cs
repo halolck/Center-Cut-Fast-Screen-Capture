@@ -28,9 +28,11 @@ namespace FastCutCapture
         public Form1()
         {
             InitializeComponent();
+            //もしサイズを%で計算したいならこの下3つを消して4行目を利用してね
             numericUpDown1.Maximum = w;
             numericUpDown2.Maximum = h;
             screenStateLogger.ChangeSize(new Rectangle(w / 2 - (int)numericUpDown1.Value / 2, h / 2 - (int)numericUpDown2.Value / 2, (int)numericUpDown1.Value, (int)numericUpDown2.Value));
+            //screenStateLogger.ChangeSize(new Rectangle((int)(w / 2 - w/200 * numericUpDown1.Value), (int)(h / 2 - h/200 * numericUpDown2.Value),(int)( w / 100 * numericUpDown1.Value), (int)(h / 100 * numericUpDown2.Value)));
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -48,9 +50,10 @@ namespace FastCutCapture
         }
 
         private void numericUpDown1_ValueChanged(object sender, EventArgs e)
-        {
+        {            
+            //もしサイズを%で計算したいならこの下1つを消して2行目を利用してね
             screenStateLogger.ChangeSize(new Rectangle(w / 2 - (int)numericUpDown1.Value / 2, h / 2 - (int)numericUpDown2.Value / 2, (int)numericUpDown1.Value, (int)numericUpDown2.Value));
-
+            //screenStateLogger.ChangeSize(new Rectangle((int)(w / 2 - w/200 * numericUpDown1.Value), (int)(h / 2 - h/200 * numericUpDown2.Value),(int)( w / 100 * numericUpDown1.Value), (int)(h / 100 * numericUpDown2.Value)));
         }
 
         private void capturetest()
