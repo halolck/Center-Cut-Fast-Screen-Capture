@@ -5,7 +5,7 @@ sharpdxを使った高速なスクリーンキャプチャー 切り抜きもで
 
 # 見た目
 
-![airplane](https://media.discordapp.net/attachments/639841304112660591/1040180541305147442/image.png)
+![airplane](https://cdn.discordapp.com/attachments/639841304112660591/1040270438955237386/image.png)
 
 # 普通のキャプチャーと比べて
 
