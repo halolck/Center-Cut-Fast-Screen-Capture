@@ -76,6 +76,8 @@ namespace FastCutCapture
     }
     public class ScreenStateLogger
     {
+        bool CaptureSizeChangeFlug = false;
+
         private bool _run, _init;
         private Rectangle rects = new Rectangle(0, 0, 100, 100);
 
@@ -87,6 +89,7 @@ namespace FastCutCapture
         public void ChangeSize(Rectangle rec)
         {
             rects = rec;
+            CaptureSizeChangeFlug = false;
         }
 
         public void Start()
@@ -106,7 +109,7 @@ namespace FastCutCapture
             int height = output.Description.DesktopBounds.Bottom;
 
             // Create Staging texture CPU-accessible
-            var textureDesc = new Texture2DDescription //ここ直したらもっと早くなりそう
+            var textureDesc = new Texture2DDescription 
             {
                 CpuAccessFlags = CpuAccessFlags.Read,
                 BindFlags = BindFlags.None,
@@ -130,7 +133,15 @@ namespace FastCutCapture
                     {
                         try
                         {
+                            
                             Rectangle rect = rects;
+                            if (CaptureSizeChangeFlug)
+                            {
+                                textureDesc.Height = rects.Height;
+                                textureDesc.Width = rects.Width;
+                                CaptureSizeChangeFlug = false;
+                            }
+                            
                             SharpDX.DXGI.Resource screenResource;
                             OutputDuplicateFrameInformation duplicateFrameInformation;
 
