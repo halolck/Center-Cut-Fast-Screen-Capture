@@ -149,49 +149,51 @@ namespace FastCutCapture
                             OutputDuplicateFrameInformation duplicateFrameInformation;
 
                             // Try to get duplicated frame within given time is ms
-                            duplicatedOutput.AcquireNextFrame(5, out duplicateFrameInformation, out screenResource);
-
-                            // copy resource into memory that can be accessed by the CPU
-                            using (var screenTexture2D = screenResource.QueryInterface<Texture2D>())
-                                device.ImmediateContext.CopyResource(screenTexture2D, screenTexture);
-
-                            // Get the desktop capture texture
-                            var mapSource = device.ImmediateContext.MapSubresource(screenTexture, 0, MapMode.Read, SharpDX.Direct3D11.MapFlags.None);
-
-                            // Create Drawing.Bitmap
-                            using (var bitmap = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb))
+                            Result result =　duplicatedOutput.TryAcquireNextFrame(5, out duplicateFrameInformation, out screenResource);
+                            if (result.Success)
                             {
-                                // Copy pixels from screen capture Texture to GDI bitmap
-                                var mapDest = bitmap.LockBits(new Rectangle(0, 0, rect.Width, rect.Height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
-                                if (1 + 1 == 2)
+                                // copy resource into memory that can be accessed by the CPU
+                                using (var screenTexture2D = screenResource.QueryInterface<Texture2D>())
+                                    device.ImmediateContext.CopyResource(screenTexture2D, screenTexture);
+
+                                // Get the desktop capture texture
+                                var mapSource = device.ImmediateContext.MapSubresource(screenTexture, 0, MapMode.Read, SharpDX.Direct3D11.MapFlags.None);
+
+                                // Create Drawing.Bitmap
+                                using (var bitmap = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb))
                                 {
-                                    var sourcePtr = mapSource.DataPointer + (rect.Left - 1) * 4 + width * (rect.Top - 1) * 4; //width /半分問題
-                                    var destPtr = mapDest.Scan0;
-                                    for (int y = 0; y < rect.Height; y++)
+                                    // Copy pixels from screen capture Texture to GDI bitmap
+                                    var mapDest = bitmap.LockBits(new Rectangle(0, 0, rect.Width, rect.Height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
+                                    if (1 + 1 == 2)
                                     {
-                                        // Copy a single line 
-                                        Utilities.CopyMemory(destPtr, sourcePtr, rect.Width * 4);
+                                        var sourcePtr = mapSource.DataPointer + (rect.Left - 1) * 4 + width * (rect.Top - 1) * 4; //width /半分問題
+                                        var destPtr = mapDest.Scan0;
+                                        for (int y = 0; y < rect.Height; y++)
+                                        {
+                                            // Copy a single line 
+                                            Utilities.CopyMemory(destPtr, sourcePtr, rect.Width * 4);
 
-                                        // Advance pointers
-                                        sourcePtr = IntPtr.Add(sourcePtr, mapSource.RowPitch);
-                                        destPtr = IntPtr.Add(destPtr, mapDest.Stride);
+                                            // Advance pointers
+                                            sourcePtr = IntPtr.Add(sourcePtr, mapSource.RowPitch);
+                                            destPtr = IntPtr.Add(destPtr, mapDest.Stride);
+                                        }
+
+                                        // Release source and dest locks
+                                        bitmap.UnlockBits(mapDest);
+                                        device.ImmediateContext.UnmapSubresource(screenTexture, 0);
+
+                                        using (var ms = new MemoryStream())
+                                        {
+                                            bitmap.Save(ms, ImageFormat.Bmp);
+                                            ScreenRefreshed?.Invoke(this, ms.ToArray());
+                                            _init = true;
+                                        }
                                     }
 
-                                    // Release source and dest locks
-                                    bitmap.UnlockBits(mapDest);
-                                    device.ImmediateContext.UnmapSubresource(screenTexture, 0);
-
-                                    using (var ms = new MemoryStream())
-                                    {
-                                        bitmap.Save(ms, ImageFormat.Bmp);
-                                        ScreenRefreshed?.Invoke(this, ms.ToArray());
-                                        _init = true;
-                                    }
                                 }
-
+                                screenResource.Dispose();
+                                duplicatedOutput.ReleaseFrame();
                             }
-                            screenResource.Dispose();
-                            duplicatedOutput.ReleaseFrame();
                         }
                         catch (SharpDXException e)
                         {
